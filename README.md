@@ -23,6 +23,9 @@ cd helper
 pip install -r requirements.txt
 ```
 
+
+## 🛡️Легкая установка (exe)
+
 ## 🎮 Использование
 
 Запустите приложение:
