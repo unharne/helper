@@ -7,103 +7,122 @@ class DataManager:
     def __init__(self):
         self.data_file = "data.json"
         self.security = SecurityManager()
-        self.default_data = {
-            "farm": {
-                "field": [["пусто" for _ in range(5)] for _ in range(5)],
-                "inventory": {
-                    "морковь": 0, "картофель": 0, "помидор": 0,
-                    "огурец": 0, "баклажан": 0, "тыква": 0,
-                    "капуста": 0, "чеснок": 0
-                },
-                "money": 100,
-                "seeds": {
-                    "морковь": 5, "картофель": 5, "помидор": 5,
-                    "огурец": 0, "баклажан": 0, "тыква": 0,
-                    "капуста": 0, "чеснок": 0
-                },
-                "level": 1,
-                "experience": 0,
-                "achievements": {},
-                "tools": {
-                    "лопата": {"level": 1, "price": 50},
-                    "лейка": {"level": 1, "price": 30},
-                    "удобрение": {"level": 1, "price": 40}
-                },
-                "weather": "солнечно",
-                "season": "весна"
-            },
-            "user": {
-                "preferences": {
-                    "communication_style": "casual",
-                    "response_length": "medium",
-                    "emoji_usage": "moderate"
-                },
-                "favorite_topics": [],
-                "interaction_history": []
-            },
-            "security": {
-                "hash": "",
-                "last_modified": ""
-            }
-        }
         self.data = self.load_data()
 
-    def load_data(self) -> dict:
+    def load_data(self):
         try:
-            if not os.path.exists(self.data_file):
-                data = self.default_data.copy()
-                self.save_data(data)
-                return data
+            with open(self.data_file, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except FileNotFoundError:
+            return {
+                "user_data": {"name": "Гость"},
+                "life_gamification": {
+                    "tasks": [],
+                    "achievements": [],
+                    "level": 1,
+                    "experience": 0,
+                    "energy": 100,
+                    "coins": 0,
+                    "inventory": [],
+                    "daily_quests": [],
+                    "last_daily_reset": None
+                }
+            }
 
-            with open(self.data_file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
+    def save_data(self):
+        with open(self.data_file, "w", encoding="utf-8") as f:
+            json.dump(self.data, f, ensure_ascii=False, indent=4)
 
-            # Проверяем структуру данных
-            if not isinstance(data, dict) or "security" not in data:
-                print("⚠️ Неверная структура данных. Загружаем резервную копию...")
-                return self.default_data.copy()
+    def get_user_data(self):
+        return self.data.get("user_data", {"name": "Гость"})
 
-            # Если хеш отсутствует, генерируем его
-            if not data["security"].get("hash"):
-                data["security"]["hash"] = ""
-                data["security"]["last_modified"] = datetime.datetime.now().isoformat()
-                self.save_data(data)
-                return data
+    def update_user_data(self, user_data):
+        self.data["user_data"] = user_data
+        self.save_data()
 
-            # Проверяем хеш
-            stored_hash = data["security"]["hash"]
-            if not self.security.verify_hash(data, stored_hash):
-                print("⚠️ Обнаружена попытка изменения данных! Загружаем резервную копию...")
-                return self.default_data.copy()
+    def get_life_tasks(self):
+        return self.data.get("life_gamification", {}).get("tasks", [])
 
-            return data
+    def get_life_achievements(self):
+        return self.data.get("life_gamification", {}).get("achievements", [])
 
-        except Exception as e:
-            print(f"⚠️ Ошибка при загрузке данных: {e}")
-            return self.default_data.copy()
+    def get_life_level(self):
+        return self.data.get("life_gamification", {}).get("level", 1)
 
-    def save_data(self, data=None):
-        try:
-            if data is None:
-                data = self.data
+    def get_life_experience(self):
+        return self.data.get("life_gamification", {}).get("experience", 0)
 
-            data_to_save = data.copy()
-            data_to_save["security"]["last_modified"] = datetime.datetime.now().isoformat()
-            
-            # Генерируем хеш для данных
-            data_to_save["security"]["hash"] = self.security.generate_hash(data_to_save)
+    def get_life_energy(self):
+        return self.data.get("life_gamification", {}).get("energy", 100)
 
-            with open(self.data_file, 'w', encoding='utf-8') as f:
-                json.dump(data_to_save, f, ensure_ascii=False, indent=4)
+    def get_life_coins(self):
+        return self.data.get("life_gamification", {}).get("coins", 0)
 
-        except Exception as e:
-            print(f"⚠️ Ошибка при сохранении данных: {e}")
+    def get_life_inventory(self):
+        return self.data.get("life_gamification", {}).get("inventory", [])
+
+    def get_life_daily_quests(self):
+        return self.data.get("life_gamification", {}).get("daily_quests", [])
+
+    def get_life_last_daily_reset(self):
+        return self.data.get("life_gamification", {}).get("last_daily_reset")
+
+    def save_life_tasks(self, tasks):
+        if "life_gamification" not in self.data:
+            self.data["life_gamification"] = {}
+        self.data["life_gamification"]["tasks"] = tasks
+        self.save_data()
+
+    def save_life_achievements(self, achievements):
+        if "life_gamification" not in self.data:
+            self.data["life_gamification"] = {}
+        self.data["life_gamification"]["achievements"] = achievements
+        self.save_data()
+
+    def save_life_level(self, level):
+        if "life_gamification" not in self.data:
+            self.data["life_gamification"] = {}
+        self.data["life_gamification"]["level"] = level
+        self.save_data()
+
+    def save_life_experience(self, experience):
+        if "life_gamification" not in self.data:
+            self.data["life_gamification"] = {}
+        self.data["life_gamification"]["experience"] = experience
+        self.save_data()
+
+    def save_life_energy(self, energy):
+        if "life_gamification" not in self.data:
+            self.data["life_gamification"] = {}
+        self.data["life_gamification"]["energy"] = energy
+        self.save_data()
+
+    def save_life_coins(self, coins):
+        if "life_gamification" not in self.data:
+            self.data["life_gamification"] = {}
+        self.data["life_gamification"]["coins"] = coins
+        self.save_data()
+
+    def save_life_inventory(self, inventory):
+        if "life_gamification" not in self.data:
+            self.data["life_gamification"] = {}
+        self.data["life_gamification"]["inventory"] = inventory
+        self.save_data()
+
+    def save_life_daily_quests(self, quests):
+        if "life_gamification" not in self.data:
+            self.data["life_gamification"] = {}
+        self.data["life_gamification"]["daily_quests"] = quests
+        self.save_data()
+
+    def save_life_last_daily_reset(self, last_reset):
+        if "life_gamification" not in self.data:
+            self.data["life_gamification"] = {}
+        self.data["life_gamification"]["last_daily_reset"] = last_reset
+        self.save_data()
 
     def get_farm_data(self) -> dict:
         return self.data["farm"]
-
-    def get_user_data(self) -> dict:
-        return self.data["user"]
 
     def update_farm_data(self, farm_data: dict) -> bool:
         old_data = self.data["farm"]
@@ -132,6 +151,72 @@ class DataManager:
         self.save_data()
         return True
 
-    def update_user_data(self, user_data: dict):
-        self.data["user"] = user_data
+    def get_life_goals(self) -> list:
+        return self.data["life_gamification"]["goals"]
+
+    def save_life_goals(self, goals: list):
+        self.data["life_gamification"]["goals"] = goals
+        self.save_data()
+
+    def get_life_streak(self) -> dict:
+        return self.data["life_gamification"].get("streak", {"current": 0, "max": 0})
+
+    def get_life_skills(self):
+        """Получить навыки"""
+        return self.data.get("life_gamification", {}).get("skills", {})
+
+    def get_life_quests(self) -> list:
+        return self.data["life_gamification"].get("quests", [])
+
+    def get_life_rewards(self) -> list:
+        return self.data["life_gamification"].get("rewards", [])
+
+    def get_life_last_completion(self) -> str:
+        return self.data["life_gamification"].get("last_completion", None)
+
+    def save_life_streak(self, streak: dict):
+        self.data["life_gamification"]["streak"] = streak
+        self.save_data()
+
+    def save_life_skills(self, skills):
+        """Сохранить навыки"""
+        if "life_gamification" not in self.data:
+            self.data["life_gamification"] = {}
+        self.data["life_gamification"]["skills"] = skills
+        self.save_data()
+
+    def save_life_quests(self, quests: list):
+        self.data["life_gamification"]["quests"] = quests
+        self.save_data()
+
+    def save_life_rewards(self, rewards: list):
+        self.data["life_gamification"]["rewards"] = rewards
+        self.save_data()
+
+    def save_life_last_completion(self, last_completion: str):
+        self.data["life_gamification"]["last_completion"] = last_completion
+        self.save_data()
+
+    def get_life_daily_quests(self):
+        """Получить ежедневные задания"""
+        return self.data.get("life_daily_quests", [])
+
+    def save_life_daily_quests(self, quests):
+        """Сохранить ежедневные задания"""
+        self.data["life_daily_quests"] = quests
+        self.save_data()
+
+    def get_life_last_daily_reset(self):
+        """Получить время последнего сброса ежедневных заданий"""
+        return self.data.get("life_last_daily_reset")
+
+    def get_life_friends(self):
+        """Получить список друзей"""
+        return self.data.get("life_gamification", {}).get("friends", [])
+
+    def save_life_friends(self, friends):
+        """Сохранить список друзей"""
+        if "life_gamification" not in self.data:
+            self.data["life_gamification"] = {}
+        self.data["life_gamification"]["friends"] = friends
         self.save_data() 

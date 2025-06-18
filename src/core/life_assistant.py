@@ -1,10 +1,11 @@
 import webbrowser
-from colorama import Fore, init
+from colorama import Fore, init, Style
 from ..core.data_manager import DataManager
 from ..games.farm import Farm
 from ..utils.weather import Weather
 from ..utils.cipher import Cipher
 from ..network.chat import Chat
+from ..games.life_gamification import LifeGamification
 
 # Initialize colorama
 init()
@@ -16,6 +17,7 @@ class LifeAssistant:
         self.weather = Weather()
         self.cipher = Cipher()
         self.chat = Chat()
+        self.life_gamification = LifeGamification(self.data_manager)
         self.name = "Гость"
         user_data = self.data_manager.get_user_data()
         if "name" in user_data:
@@ -46,9 +48,10 @@ class LifeAssistant:
             print("5. 🔗 GitHub")
             print("6. 🔐 Шифрование")
             print("7. 💬 Локальная беседа")
-            print("8. ❌ Выход")
+            print("8. 🎮 Геймификация жизни")
+            print("9. ❌ Выход")
             
-            choice = input("\nВыберите действие (1-8): ")
+            choice = input("\nВыберите действие (1-9): ")
             
             if choice == "1":
                 self.farm_game()
@@ -65,6 +68,8 @@ class LifeAssistant:
             elif choice == "7":
                 self.chat_menu()
             elif choice == "8":
+                self.life_gamification_menu()
+            elif choice == "9":
                 print("\nДо свидания! 👋")
                 break
             else:
@@ -361,4 +366,37 @@ class LifeAssistant:
         elif choice == "2":
             self.chat.start_client()
         else:
-            print(Fore.RED + "🚫 Неверный выбор. Введите 1 или 2.") 
+            print(Fore.RED + "🚫 Неверный выбор. Введите 1 или 2.")
+
+    def life_gamification_menu(self):
+        while True:
+            print(f"\n{Fore.CYAN}=== 🎮 Жизненная геймификация ==={Style.RESET_ALL}")
+            print(f"{Fore.CYAN}👤 Уровень: {self.life_gamification.level} ⭐")
+            print(f"⭐ Опыт: {int(self.life_gamification.experience)}/{int(self.life_gamification.experience_to_next_level)}")
+            print(f"⚡ Энергия: {self.life_gamification.energy}/100{Style.RESET_ALL}")
+            
+            print(f"\n{Fore.CYAN}Доступные действия:{Style.RESET_ALL}")
+            print("1. 📝 Добавить задачу")
+            print("2. ✅ Завершить задачу")
+            print("3. 📜 Ежедневные задания")
+            print("4. 📊 Статистика")
+            print("0. ↩️ Вернуться в главное меню")
+            
+            choice = input(f"\n{Fore.CYAN}Выберите действие (0-4): {Style.RESET_ALL}")
+            
+            if choice == "0":
+                break
+            elif choice == "1":
+                self.life_gamification.add_task()
+            elif choice == "2":
+                self.life_gamification.complete_task()
+            elif choice == "3":
+                self.life_gamification.show_daily_quests()
+                if self.life_gamification.daily_quests:
+                    quest_choice = input(f"\n{Fore.CYAN}Выберите задание для выполнения (1-3) или 0 для возврата: {Style.RESET_ALL}")
+                    if quest_choice in ["1", "2", "3"]:
+                        self.life_gamification.complete_daily_quest(int(quest_choice) - 1)
+            elif choice == "4":
+                self.life_gamification.show_statistics()
+            else:
+                print(f"{Fore.RED}❌ Неверный выбор{Style.RESET_ALL}") 
